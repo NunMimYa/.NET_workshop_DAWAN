@@ -1,0 +1,50 @@
+:root {
+  font-family: sans-serif;
+  --color: #0d1117;
+
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+  background-color: #ffffff;
+  background-color: var(--color);
+  color: rgb(5, 36, 37);
+  color: #fff;
+}
+
+header>nav {
+  background-color: #000000;
+}
+
+body>div>main>main>section {
+  display: flex;
+  flex-direction: row;
+}
+
+body>div>main>main>section>article {
+  width: 50%;
+}
+
+#form-retail>fieldset>p>input {
+  width: 100%;
+}
+
+#form-retail>fieldset:nth-child(2)>p:nth-child(5)>textarea {
+  width: 100%;
+  height: 199px;
+}
