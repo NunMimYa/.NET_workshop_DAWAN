@@ -20,7 +20,7 @@ namespace ContosoUniversity.Pages.Courses
         }
 
         [BindProperty]
-      public Course Course { get; set; }
+        public Course Course { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -29,13 +29,17 @@ namespace ContosoUniversity.Pages.Courses
                 return NotFound();
             }
 
-            var course = await _context.Courses.FirstOrDefaultAsync(m => m.CourseID == id);
+            //var course = await _context.Courses.FirstOrDefaultAsync(m => m.CourseID == id);
+            var course = await _context.Courses
+            .AsNoTracking()
+            .Include(c => c.Department)
+            .FirstOrDefaultAsync(m => m.CourseID == id);
 
             if (course == null)
             {
                 return NotFound();
             }
-            else 
+            else
             {
                 Course = course;
             }
