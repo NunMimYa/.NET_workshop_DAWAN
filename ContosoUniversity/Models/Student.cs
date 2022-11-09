@@ -9,7 +9,7 @@ namespace ContosoUniversity.Models
     {
         public int ID { get; set; }
         [Required]
-        [StringLength(50)]
+        [StringLength(50)] // Limit form's input
         [Display(Name = "Last Name")]
         [RegularExpression(@"^[A-Z]+[a-zA-Z]*$")]
         public string LastName { get; set; }
