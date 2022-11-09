@@ -1,168 +1,53 @@
 ﻿using ContosoUniversity.Models;
-using Microsoft.AspNetCore.Mvc;
+using ContosoUniversity.Models.SchoolViewModels;  // Add VM
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace ContosoUniversity.Pages.Instructors
 {
-    public class EditModel : InstructorCoursesPageModel
+    public class IndexModel : PageModel
     {
         private readonly ContosoUniversity.Data.SchoolContext _context;
 
-        public EditModel(ContosoUniversity.Data.SchoolContext context)
+        public IndexModel(ContosoUniversity.Data.SchoolContext context)
         {
             _context = context;
         }
 
-        [BindProperty]
-        public Instructor Instructor { get; set; }
+        public InstructorIndexData InstructorData { get; set; }
+        public int InstructorID { get; set; }
+        public int CourseID { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public async Task OnGetAsync(int? id, int? courseID)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            Instructor = await _context.Instructors
+            InstructorData = new InstructorIndexData();
+            InstructorData.Instructors = await _context.Instructors
                 .Include(i => i.OfficeAssignment)
                 .Include(i => i.Courses)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.ID == id);
+                    .ThenInclude(c => c.Department)
+                .OrderBy(i => i.LastName)
+                .ToListAsync();
 
-            if (Instructor == null)
+            if (id != null)
             {
-                return NotFound();
-            }
-            PopulateAssignedCourseData(_context, Instructor);
-            return Page();
-        }
-
-        public async Task<IActionResult> OnPostAsync(int? id, string[] selectedCourses)
-        {
-            if (id == null)
-            {
-                return NotFound();
+                InstructorID = id.Value;
+                Instructor instructor = InstructorData.Instructors
+                    .Where(i => i.ID == id.Value).Single();
+                InstructorData.Courses = instructor.Courses;
             }
 
-            var instructorToUpdate = await _context.Instructors
-                .Include(i => i.OfficeAssignment)
-                .Include(i => i.Courses)
-                .FirstOrDefaultAsync(s => s.ID == id);
-
-            if (instructorToUpdate == null)
+            if (courseID != null)
             {
-                return NotFound();
-            }
-
-            if (await TryUpdateModelAsync<Instructor>(
-                instructorToUpdate,
-                "Instructor",
-                i => i.FirstMidName, i => i.LastName,
-                i => i.HireDate, i => i.OfficeAssignment))
-            {
-                if (String.IsNullOrWhiteSpace(
-                    instructorToUpdate.OfficeAssignment?.Location))
-                {
-                    instructorToUpdate.OfficeAssignment = null;
-                }
-                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
-                await _context.SaveChangesAsync();
-                return RedirectToPage("./Index");
-            }
-            UpdateInstructorCourses(selectedCourses, instructorToUpdate);
-            PopulateAssignedCourseData(_context, instructorToUpdate);
-            return Page();
-        }
-
-        public void UpdateInstructorCourses(string[] selectedCourses,
-                                            Instructor instructorToUpdate)
-        {
-            if (selectedCourses == null)
-            {
-                instructorToUpdate.Courses = new List<Course>();
-                return;
-            }
-
-            var selectedCoursesHS = new HashSet<string>(selectedCourses);
-            var instructorCourses = new HashSet<int>
-                (instructorToUpdate.Courses.Select(c => c.CourseID));
-            foreach (var course in _context.Courses)
-            {
-                if (selectedCoursesHS.Contains(course.CourseID.ToString()))
-                {
-                    if (!instructorCourses.Contains(course.CourseID))
-                    {
-                        instructorToUpdate.Courses.Add(course);
-                    }
-                }
-                else
-                {
-                    if (instructorCourses.Contains(course.CourseID))
-                    {
-                        var courseToRemove = instructorToUpdate.Courses.Single(
-                                                        c => c.CourseID == course.CourseID);
-                        instructorToUpdate.Courses.Remove(courseToRemove);
-                    }
-                }
+                CourseID = courseID.Value;
+                IEnumerable<Enrollment> Enrollments = await _context.Enrollments
+                    .Where(x => x.CourseID == CourseID)
+                    .Include(i => i.Student)
+                    .ToListAsync();
+                InstructorData.Enrollments = Enrollments;
             }
         }
     }
 }
-
-//using ContosoUniversity.Models;
-//using ContosoUniversity.Models.SchoolViewModels;  // Add VM
-//using Microsoft.AspNetCore.Mvc.RazorPages;
-//using Microsoft.EntityFrameworkCore;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
-//namespace ContosoUniversity.Pages.Instructors
-//{
-//    public class IndexModel : PageModel
-//    {
-//        private readonly ContosoUniversity.Data.SchoolContext _context;
-
-//        public IndexModel(ContosoUniversity.Data.SchoolContext context)
-//        {
-//            _context = context;
-//        }
-
-//        public InstructorIndexData InstructorData { get; set; }
-//        public int InstructorID { get; set; }
-//        public int CourseID { get; set; }
-
-//        public async Task OnGetAsync(int? id, int? courseID)
-//        {
-//            InstructorData = new InstructorIndexData();
-//            InstructorData.Instructors = await _context.Instructors
-//                .Include(i => i.OfficeAssignment)
-//                .Include(i => i.Courses)
-//                    .ThenInclude(c => c.Department)
-//                .OrderBy(i => i.LastName)
-//                .ToListAsync();
-
-//            if (id != null)
-//            {
-//                InstructorID = id.Value;
-//                Instructor instructor = InstructorData.Instructors
-//                    .Where(i => i.ID == id.Value).Single();
-//                InstructorData.Courses = instructor.Courses;
-//            }
-
-//            if (courseID != null)
-//            {
-//                CourseID = courseID.Value;
-//                IEnumerable<Enrollment> Enrollments = await _context.Enrollments
-//                    .Where(x => x.CourseID == CourseID)
-//                    .Include(i => i.Student)
-//                    .ToListAsync();
-//                InstructorData.Enrollments = Enrollments;
-//            }
-//        }
-//    }
-//}
