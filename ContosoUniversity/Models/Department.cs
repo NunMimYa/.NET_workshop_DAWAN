@@ -46,6 +46,16 @@ namespace ContosoUniversity.Models
 
         public int? InstructorID { get; set; }
 
+        /*
+         * Part 8 - Concurrency
+         * The TimestampAttribute is what identifies the column as a concurrency tracking column. 
+         * 
+         * The fluent API is an alternative way to specify the tracking property:
+         * modelBuilder.Entity<Department>().Property<byte[]>("ConcurrencyToken").IsRowVersion();
+         */
+        [Timestamp]
+        public byte[] ConcurrencyToken { get; set; }
+
         public Instructor Administrator { get; set; }
 
         /*
